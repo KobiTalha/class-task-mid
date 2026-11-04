@@ -14,6 +14,10 @@ describe('Faculties API (e2e)', () => {
     expertise: 'Machine Learning',
     noOfPublication: 30,
   };
+  const repository = {
+    create: (value: object) => value,
+    insert: vi.fn(async () => undefined),
+  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -22,7 +26,7 @@ describe('Faculties API (e2e)', () => {
         FacultiesService,
         {
           provide: getRepositoryToken(Faculty),
-          useValue: { create: (value: object) => value, save: async (value: object) => value },
+          useValue: repository,
         },
       ],
     }).compile();
@@ -50,5 +54,19 @@ describe('Faculties API (e2e)', () => {
       .post('/faculties/create-faculty')
       .send(invalidFaculty)
       .expect(400);
+  });
+
+  it('returns a conflict when PostgreSQL reports a duplicate primary key', async () => {
+    repository.insert.mockRejectedValueOnce({ driverError: { code: '23505' } });
+
+    await request(app.getHttpServer())
+      .post('/faculties/create-faculty')
+      .send(savedFaculty)
+      .expect(409)
+      .expect({
+        message: 'A faculty with this id already exists.',
+        error: 'Conflict',
+        statusCode: 409,
+      });
   });
 });
