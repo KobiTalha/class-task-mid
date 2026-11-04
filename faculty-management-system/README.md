@@ -28,7 +28,7 @@ npm run start:dev
 }
 ```
 
-The API validates all four required fields and returns the saved faculty record. Unknown properties are rejected.
+The API validates all four required fields and returns the inserted faculty record. Unknown properties are rejected. Reusing an existing `id` returns HTTP `409 Conflict` without changing the original row.
 
 ## Verification
 
